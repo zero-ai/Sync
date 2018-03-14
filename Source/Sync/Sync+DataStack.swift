@@ -69,9 +69,10 @@ public extension DataStack {
     ///   - entityName: The name of the entity to be synced.
     ///   - parent: The parent of the synced items, useful if you are syncing the childs of an object, for example
     /// an Album has many photos, if this photos don't incldue the album's JSON object, syncing the photos JSON requires
+    ///   - operations: The type of operations to be applied to the data, Insert, Update, Delete or any possible combination.
     /// you to send the parent album to do the proper mapping.
     ///   - completion: The completion block, it returns an error if something in the Sync process goes wrong.
-    public func sync(_ changes: [[String: Any]], inEntityNamed entityName: String, parent: NSManagedObject, completion: ((_ error: NSError?) -> Void)?) {
+    public func sync(_ changes: [[String: Any]], inEntityNamed entityName: String, parent: NSManagedObject, operations: Sync.OperationOptions = .all, completion: ((_ error: NSError?) -> Void)?) {
         self.performInNewBackgroundContext { backgroundContext in
             let safeParent = parent.sync_copyInContext(backgroundContext)
             guard let entity = NSEntityDescription.entity(forEntityName: entityName, in: backgroundContext) else { fatalError("Couldn't find entity named: \(entityName)") }
@@ -82,7 +83,7 @@ public extension DataStack {
             if let firstRelationship = firstRelationship {
                 predicate = NSPredicate(format: "%K = %@", firstRelationship.name, safeParent)
             }
-            Sync.changes(changes, inEntityNamed: entityName, predicate: predicate, parent: safeParent, parentRelationship: firstRelationship?.inverseRelationship, inContext: backgroundContext, operations: .all, completion: completion)
+            Sync.changes(changes, inEntityNamed: entityName, predicate: predicate, parent: safeParent, parentRelationship: firstRelationship?.inverseRelationship, inContext: backgroundContext, operations: operations, completion: completion)
         }
     }
 
